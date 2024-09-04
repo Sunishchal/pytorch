@@ -77,6 +77,7 @@ class InputBuffer:
     succ_nodes: OrderedSet[BaseSchedulerNode] = dataclasses.field(
         default_factory=OrderedSet
     )
+    outdegree: int = 0
 
     def get_name(self) -> str:
         return self.dep.name
@@ -103,6 +104,7 @@ class SchedulerBuffer:
     succ_nodes: OrderedSet[BaseSchedulerNode] = dataclasses.field(
         default_factory=OrderedSet
     )
+    outdegree: int = 0
 
     def __hash__(self) -> int:
         return hash(self.node.name)
@@ -186,6 +188,14 @@ class BaseSchedulerNode:
     group: Tuple[torch.device, Tuple[Tuple[sympy.Expr, ...], ...]]
     read_writes: dependencies.ReadWrites
     unmet_dependencies: OrderedSet[Dep]
+    pred_buffers: List[Union[SchedulerBuffer, InputBuffer]]
+    pred_nodes: List[BaseSchedulerNode]
+    succ_nodes: List[BaseSchedulerNode]
+    indegree: int
+    index: int
+    memory_to_free: int
+    size: int
+    measure: int
 
     def __init__(self, scheduler: Scheduler, node: ir.Operation) -> None:
         self.scheduler: Scheduler = scheduler
