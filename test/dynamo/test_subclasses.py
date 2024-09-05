@@ -10,6 +10,7 @@ import torch._dynamo.testing
 import torch._functorch.config
 import torch.utils._pytree as pytree
 import torch.utils.checkpoint
+from torch._dynamo import config as dynamo_config
 from torch._dynamo.testing import normalize_gm
 from torch._higher_order_ops.wrap import wrap
 from torch.fx.experimental.symbolic_shapes import (
@@ -2239,6 +2240,7 @@ class TestNestedTensor(torch._dynamo.test_case.TestCase, NestedTensorTestCase):
         for ref_v, res_v in zip(values_copy, values):
             self.assertEqual(ref_v.grad, res_v.grad)
 
+    @dynamo_config.patch({"capture_scalar_outputs": True})
     def test_unbind(self):
         # NB: If we have shape e.g. (3, j0, 3), duck sizing will give us (s0, s1, s0).
         # This causes a recompile later on when it realizes the batch and last dim
