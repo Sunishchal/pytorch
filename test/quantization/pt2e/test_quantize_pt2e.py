@@ -54,6 +54,7 @@ from torch.testing._internal.common_utils import (
     TEST_WITH_ROCM,
 )
 
+from torch._utils_internal import capture_pre_autograd_graph_using_training_ir
 
 @skipIfNoQNNPACK
 class TestQuantizePT2E(PT2EQuantizationTestCase):
@@ -1309,7 +1310,7 @@ class TestQuantizePT2E(PT2EQuantizationTestCase):
 
         m = M().eval()
         example_inputs = torch.randn(1, 2, 3, 3)
-        m = capture_pre_autograd_graph(m, example_inputs)
+        m = capture_pre_autograd_graph(m, (example_inputs,))
         with self.assertRaises(Exception):
             m = prepare_pt2e(m, BackendAQuantizer())
 
@@ -1863,6 +1864,11 @@ class TestQuantizePT2E(PT2EQuantizationTestCase):
         self._test_move_exported_model_dropout(inplace=True)
 
     def _get_bn_train_eval_ops(self):
+        if capture_pre_autograd_graph_using_training_ir():
+            return (torch.ops.aten.batch_norm.default, torch.ops.aten.batch_norm.default)
+        # TODO: This branch is going through a deprecated branch and should be deleted soon,
+        # after capture_pre_autograd_graph fully migrate to training IR
+        # T199018392
         if TEST_WITH_ROCM:
             return (
                 torch.ops.aten.miopen_batch_norm.default,
